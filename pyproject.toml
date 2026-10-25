@@ -1,6 +1,6 @@
 [project]
 name = "spinf-serve"
-version = "0.1.0"
+version = "0.1.1"
 description = "The open-source inference engine for decision models: one input read once, hundreds of questions scored in parallel on one GPU"
 readme = "README.md"
 license = "Apache-2.0"
