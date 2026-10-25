@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security
+    url: https://github.com/spinfinc/spinf-serve/blob/main/SECURITY.md
+    about: Report a vulnerability privately, not as an issue.

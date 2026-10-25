@@ -1,0 +1,11 @@
+name: Question or idea
+description: Ask anything about spinf-serve, the API, the models or the packs, or suggest something
+labels: [question]
+body:
+  - type: textarea
+    id: text
+    attributes:
+      label: Your question or idea
+      description: Issues are the one place for questions, ideas and feedback; there is no forum or chat. Nothing is too small.
+    validations:
+      required: true

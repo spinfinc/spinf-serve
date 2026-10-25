@@ -8,8 +8,9 @@ The official packs live in [spinf-prompts](https://github.com/spinfinc/spinf-pro
 `spinf/moderation` (22 categories of user-generated text and a safe / unsafe decision), `spinf/triage` (inbound emails,
 chats and tickets), `spinf/entertainment` (synopses), `spinf/products` (listings), `spinf/reviews` and `spinf/brand` (a
 page plus a brand parameter); for the Qwen model `spinf/moderation-qwen` and `spinf/moderation-qwen-lite`; for the
-decision model `spinf/moderation-decider` (the same questions in its own format). A pack is written for one model; the
-server enables the packs whose model it serves.
+decision model `spinf/moderation-decider` (the same questions in its own format). Packs from other publishers load
+the same way from their own repositories; [PACKS.md](../PACKS.md) lists every pack we know of, and an issue adds yours.
+A pack is written for one model; the server enables the packs whose model it serves.
 
 ## Sources
 

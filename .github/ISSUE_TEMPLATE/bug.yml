@@ -1,0 +1,22 @@
+name: Bug
+description: Something does not work, or gives a wrong answer
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you got, what you expected. Error text and the `engine ready` log line (version, model, GPU, torch) help.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The request (a curl call or a spinf-client snippet) and the server command line or image tag.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: spinf-serve 0.1.1, ghcr.io/spinfinc/spinf-serve:0.1.1, or a commit

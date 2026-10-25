@@ -1,0 +1,43 @@
+name: List my pack
+description: Add a prompt pack you published to PACKS.md
+title: "Pack: "
+labels: [pack]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for publishing a pack. Fill this in and it goes on [PACKS.md](https://github.com/spinfinc/spinf-serve/blob/main/PACKS.md).
+        Requirements: a public repository with a `prompt-packs.json` at its root that `spinf-serve packs validate` accepts, your own namespace, a licence.
+  - type: input
+    id: repo
+    attributes:
+      label: Repository
+      placeholder: https://github.com/you/your-packs
+    validations:
+      required: true
+  - type: input
+    id: ids
+    attributes:
+      label: Pack ids
+      placeholder: you/support-tickets, you/support-tickets-lite
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      placeholder: spinf/gemma-4-12b-fp8
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What it does
+      description: One or two lines, the way the rows in PACKS.md read; what the content is and what comes back.
+    validations:
+      required: true
+  - type: input
+    id: licence
+    attributes:
+      label: Licence
+      placeholder: Apache 2.0

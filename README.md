@@ -21,15 +21,17 @@ one 24 GB GPU and serves an OpenAI-compatible API that is also the API of the ho
   says when they do not.
 - **Media.** Images, audio and video frames in the content, read by the models that support them.
 - **Prompt packs.** Ready-made, calibrated question sets preloaded into the server and named in a request
-  ([below](#prompt-packs)).
+  ([below](#prompt-packs)); every pack we know of, ours and others', is listed in [PACKS.md](PACKS.md).
 - **Throughput.** Inputs are packed into 16k-token passes on one GPU: about 10,000 tokens per second on an RTX 4090
   with the 12B model.
 - **One API, hosted or self-hosted.** The request and response are those of `api.spinf.com`; a client switches by
   changing the base URL and the key.
 - **Clients and agents.** [spinf-client](https://github.com/spinfinc/spinf-client) (`pip install spinf-client`) talks to
   either server; the [agent skills](https://github.com/spinfinc/skills) teach a coding agent the API, this server and the pack
-  format; [spinf-prompts](https://github.com/spinfinc/spinf-prompts) holds the official packs, and community packs such as
-  [thinkingtext/spinf-news-pack](https://github.com/thinkingtext/spinf-news-pack) load with `--packs`.
+  format; the packs come from [spinf-prompts](https://github.com/spinfinc/spinf-prompts) and from anyone's repository
+  ([PACKS.md](PACKS.md)).
+- **Questions, ideas, bugs.** The [issues](https://github.com/spinfinc/spinf-serve/issues) of this repository are the one
+  place for them; there is no forum or chat.
 
 ## Speed and scale
 
@@ -88,11 +90,15 @@ and how the scores turn into a decision. Packs are preloaded into the server, so
 "spinf/moderation"}]`) instead of carrying hundreds of questions over and over, and gets the pack's categories and
 decision back next to its own questions, from the same read of the content.
 
-Because a pack is a file, it is also a **ready-to-go, shareable set**: the server loads packs from
-[spinf-prompts](https://github.com/spinfinc/spinf-prompts), the official repository (content moderation first), and
-from any GitHub repository or local folder you point it at, enabling the ones written for the model it serves. Publish
-your own with a manifest at the root of your repository. Details, the file format and the request fields:
-[docs/prompt-packs.md](docs/prompt-packs.md).
+Because a pack is a file, it is also a **ready-to-go, shareable set**, and the way specialised knowledge travels
+around this engine. The server loads packs from any GitHub repository or local folder you point it at with `--packs`,
+enabling the ones written for the model it serves; [spinf-prompts](https://github.com/spinfinc/spinf-prompts), the
+official repository (content moderation, triage, products, reviews, brand, entertainment), is one such source, loaded
+by default. **[PACKS.md](PACKS.md) lists every pack we know of**, the official ones and the community's, with
+[thinkingtext/spinf-news-pack](https://github.com/thinkingtext/spinf-news-pack) (oil, equity and market news read as the
+question sets behind a news index) the first from outside. Writing one is a JSON file and a manifest at the root of your
+repository, and listing it is [an issue](https://github.com/spinfinc/spinf-serve/issues/new?template=pack.yml). Details,
+the file format and the request fields: [docs/prompt-packs.md](docs/prompt-packs.md).
 
 ## Install and run
 
@@ -162,7 +168,7 @@ architecture family runs by its path, quantized at load time.
 [docs/](docs/README.md): [quickstart](docs/quickstart.md), [examples](docs/examples.md) (curl calls for one question,
 parallel classifications, classification plus extraction, many contents, a prompt pack),
 [scoring API](docs/scoring-api.md), [configuration](docs/configuration.md), [writing questions](docs/writing-questions.md),
-[calibration](docs/calibration.md), [prompt packs](docs/prompt-packs.md), [FAQ](docs/faq.md); the [guides](docs/guides/index.md)
+[calibration](docs/calibration.md), [prompt packs](docs/prompt-packs.md) and [the list of known packs](PACKS.md), [FAQ](docs/faq.md); the [guides](docs/guides/index.md)
 (decision models, probabilities you can act on, few-shot classification, sentiment, survey coding, moderation, intent routing)
 and the engineering documents ([docs/README.md](docs/README.md#engineering-documents)).
 
