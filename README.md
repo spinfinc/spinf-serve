@@ -26,6 +26,10 @@ one 24 GB GPU and serves an OpenAI-compatible API that is also the API of the ho
   with the 12B model.
 - **One API, hosted or self-hosted.** The request and response are those of `api.spinf.com`; a client switches by
   changing the base URL and the key.
+- **Clients and agents.** [spinf-client](https://github.com/spinfinc/spinf-client) (`pip install spinf-client`) talks to
+  either server; the [agent skills](https://github.com/spinfinc/skills) teach a coding agent the API, this server and the pack
+  format; [spinf-prompts](https://github.com/spinfinc/spinf-prompts) holds the official packs, and community packs such as
+  [thinkingtext/spinf-news-pack](https://github.com/thinkingtext/spinf-news-pack) load with `--packs`.
 
 ## Speed and scale
 
