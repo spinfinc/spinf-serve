@@ -76,7 +76,7 @@ Three groups:
 | | `SPINF_PACKS_CACHE` | `~/.cache/spinf-serve/packs` | where GitHub pack sources are fetched to |
 | | `GITHUB_TOKEN` | | for pack sources in private GitHub repositories |
 | `--stack-options` | `SPINF_STACK_OPTIONS` | | research knobs of the model family as `key=value,key=value` (the Qwen stack's `QwenOptions`; none for Gemma); empty is the production configuration |
-| | `HF_TOKEN` | | a Hugging Face token: needed for the spinf model repos while they are private (before the launch), otherwise optional, raises the Hub's download rate limits |
+| | `HF_TOKEN` | | a Hugging Face token: optional (the spinf model repositories are public); raises the Hub's download rate limits, needed for a private copy of your own |
 
 **Features**
 
