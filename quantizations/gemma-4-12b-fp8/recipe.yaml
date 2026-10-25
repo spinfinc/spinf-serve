@@ -1,0 +1,20 @@
+upload: spinf/gemma-4-12b-fp8
+source: {repo: google/gemma-4-12B, revision: 023679ed352de9bb66cc873c9009ce3482585c08, format: safetensors-bf16}
+scheme: fp8-static        # e4m3 weights, per-tensor weight scale, static per-tensor activation scale per linear (fp8s)
+calibration:
+  file: calibration.json
+  method: largest |input| of every linear over the corpus with the dynamic fp8 scheme (eager), scale = 2^ceil(log2(headroom * amax / 448))
+  headroom: 2.0
+  corpus: spinf's internal calibration corpus v1 (news, oil news, moderation, multilingual, long documents, odd inputs, imagenette, imagewoof, ucf101, esc50, gtzan), 943,846 tokens
+  run: {date: 2026-10-01, gpu: NVIDIA GeForce RTX 4090, torch: 2.14.0+cu130, engine: spinf_engine (pre spinf-serve)}
+media: [image, audio, video]   # the 12B "unified" checkpoint: embedders kept bf16, never quantized
+writes:
+  - fp8 weights for every quantized linear (the same values the load-time fp8s path computes), weight_scale, input_scale
+  - bf16 for embeddings, norms, the media embedders and the tied lm head
+  - calibration.json (this file's output, for provenance), the Gemma Terms of Use and the model card
+written: {date: 2026-10-15, tool: ../fp8_quantize.py, device: RTX 4090 (the GPU matters: the CPU's division and fp8 cast differ in the last bit), size_gb: 13.0, shards: 3, quantized_linears: 328}
+artifact: the maintainers' model store (spinf/gemma-4-12b-fp8), spinf_quantize.json and calibration.json inside it; not in git
+parity: fixtures/news_20260918.spinf-gemma-4-12b-fp8.json.gz recorded 2026-10-15 (4090, 2 passes): identical bit for bit to the fp8s reference
+  (news_20260918.fp8s.json.gz, the load-time scheme on the bf16 original with the same table) on all 1,328 reads
+hub: {repo: Spinf/gemma-4-12b-fp8, revision: a689df2c5f611e3bfaa4569b8190f97db5018569, uploaded: 2026-10-16, private: true (public at launch); every LFS file's sha256 checked against the store; the manifest pins it; the engine downloaded it from the Hub by the manifest on 2026-10-16 (4090) and reproduced the fp8s reference bit for bit (1,328 reads, 2 passes)}
+status: calibrated, checkpoint written and parity-checked 2026-10-15, uploaded 2026-10-16 (private); to do: make the repo public at launch

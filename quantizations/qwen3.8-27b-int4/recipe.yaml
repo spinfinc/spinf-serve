@@ -1,0 +1,25 @@
+upload: spinf/qwen3.8-27b-int4
+source: {repo: Qwen/Qwen3.8-27B, revision: 1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0, licence: Apache-2.0}
+scheme: gptq-int4-g32     # GPTQ v1 int4, group 32 along the input, symmetric, no act-order, FOEM
+tool: {gptqmodel: 6.0.3, foem: {alpha: 0.25, beta: 0.2}, mse: 2.0, act_group_aware: true, damp_percent: 0.05}
+calibration: 256 samples of evol-codealpaca-v1 + C4, binned over 256-2048 tokens, fixed seed (../gptq_quantize.py)
+scope: text decoder linears int4; linear_attn.in_proj_a/b, norms, embeddings, lm_head, vision tower and MTP head bf16
+outliers:
+  file: spinf_outliers.json (exported 2026-10-14 with ../export_outliers.py on these weights; the copy here is the one in the checkpoint)
+  n_out: 64
+  source: per-channel absmax in bf16 over one 8,188-token stream of 300 RAGTruth decision jobs; 99-100 % of the stream's tokens peak in the kept channels of the three split linears
+  note: 94-98 % of the channels coincide with the third-party copy's table (the outlier positions are a property of the base model)
+media: [image, video]
+reference: today's served copy is btbtyler09/Qwen3.8-27B-GPTQ-4bit @ b64f44dfedb71b73287219e0ec348b0a20c447e2 (the same recipe); ours replaces it so no third-party repo is a dependency
+run: {date: 2026-10-14, gpu: A40 48 GB (RunPod secure cloud, CA-MTL-1), duration: 115 min, size_gb: 19, calibration_sha256: 06660b84b0d0f518, seed: 20261006, tools: {gptqmodel: 6.0.3, transformers: 5.10.0, torch: 2.14.0+cu130}}
+artifact: the maintainers' model store (spinf/qwen3.8-27b-int4), spinf_quantize.json inside it; not in git
+parity:
+  f16: fixtures/news_20260918.spinf-qwen3.8-27b-int4.f16.json.gz recorded 2026-10-14 (4090, 2 passes bit-identical); vs the third-party copy in f16
+    the raw scores correlate 0.990, sign agreement 95.9 %, mean |Δ lp| 0.18 (two GPTQ runs differing by their calibration draw)
+  i8: fixtures/news_20260918.spinf-qwen3.8-27b-int4.i8.json.gz recorded 2026-10-14 (the default scheme, int4-i8-split with the table above;
+    2 passes bit-identical); vs the f16 reference on the same weights: raw correlation 0.9994, sign agreement 99.25 %, mean |Δ lp| 0.045
+evaluation: 2026-10-14, the lab's 11 decision sets with spinf's label-free prompts on spinf-serve (i8 with the table above, 4090, 68 min):
+  mean of the 11 sets 79.0 (the third-party copy under the same scheme and prompts 78.4, its f16 run 78.4); per set winogrande 84.0, fpb 62.7,
+  ragtruth 77.6, judgebench 72.3, bbh 66.8, jevbench 75.7, tabfact 83.2, contractnli 81.8, circa 80.4, belebele 97.2, truthfulqa 87.8
+hub: {repo: Spinf/qwen3.8-27b-int4, revision: 22de4859c04ccdb4136d89b66e56e717db752c7c, uploaded: 2026-10-15, private: true (public at launch); every file's sha256 checked against the store; the manifest pins it; the engine downloaded it from the Hub by the manifest on 2026-10-15 and reproduced the i8 reference bit for bit (1,328 reads, 2 passes)}
+status: quantized, outlier table exported, parity references recorded for f16 and i8, 11-set run done, uploaded 2026-10-15 (private); to do: make public at launch

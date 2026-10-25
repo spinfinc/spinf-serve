@@ -1,0 +1,24 @@
+# Gemma 4 31B: a vision encoder, no audio. Needs a 48 GB card (fp8s on Ada / Blackwell; w8a16 on Ampere scores differently).
+id = "spinf/gemma-4-31b-fp8"
+name = "spinf Gemma 4 31B"
+aliases = ["spinf-31b", "google/gemma-4-31B", "gemma-4-31b"]   # the hosted service's names for this model, so a client written for it works here as is
+family = "gemma4"
+media = ["image", "video"]
+
+[source]
+repo = "spinf/gemma-4-31b-fp8"       # our FP8-static copy of google/gemma-4-31B @ 5bbc2fb1 (quantizations/gemma-4-31b-fp8); private until the launch
+revision = "8c54e9850ccca10823f2936c77ed045c735e123d"
+format = "fp8-static"
+
+[quant]
+default = "auto"
+allowed = ["fp8s", "fp8", "fp8row", "w8a16", "w8a8", "bf16"]
+
+[image]
+scheme = "gemma"
+side = 48
+detail_tokens = { low = 70, auto = 280, high = 1120 }
+
+[limits]
+token_budget = 16384
+max_tokens = 32768

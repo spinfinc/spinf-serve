@@ -1,0 +1,59 @@
+[project]
+name = "spinf-serve"
+version = "0.1.0"
+description = "The open-source inference engine for decision models: one input read once, hundreds of questions scored in parallel on one GPU"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.12"
+# the base package is pure Python: the protocol, the manifests and the packs, what a client or an API front imports without a GPU
+# stack (on any Python from 3.12); the engine and the server are extras, run on 3.12 (the kernels and their parity references)
+dependencies = ["pydantic>=2.11,<3"]
+
+[project.scripts]
+spinf-serve = "spinf_serve.cli:main"
+
+[project.optional-dependencies]
+# exact pins: the scores come from these kernels (fp8 numerics move with the stack); change them together with a parity run
+engine = [
+    "torch==2.14.0",
+    "triton==3.8.0",
+    "transformers==5.16.1",
+    "tokenizers==0.23.2",
+    "safetensors==0.8.0",
+    "huggingface_hub==1.30.0",
+    "numpy==2.5.2",
+    # image input (media.py); audio decoding needs the ffmpeg binary
+    "pillow>=11",
+    # the Qwen3.5-architecture stack (models/qwen35): fla's chunked Gated DeltaNet kernels (vendored state kernel in gdn.py)
+    "flash-linear-attention==0.5.2",
+]
+
+server = ["spinf-serve[engine]", "fastapi>=0.118", "uvicorn>=0.37"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.13", "httpx>=0.28"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["spinf_serve"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+# quantizations/: third-party recipe scripts kept as they were run, not our code
+extend-exclude = ["quantizations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["SIM105", "E741", "N806"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header"]

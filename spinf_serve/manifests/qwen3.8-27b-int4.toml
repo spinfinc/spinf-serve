@@ -1,0 +1,24 @@
+# Qwen3.8-27B, GPTQ int4 (group 32): one 24 GB card. Our own quantization (quantizations/qwen3.8-27b-int4).
+id = "spinf/qwen3.8-27b-int4"
+name = "spinf Qwen3.8 27B"
+aliases = ["qwen3.8-27b-s"]   # the hosted service's names for this model, so a client written for it works here as is
+family = "qwen35"
+media = ["image", "video"]
+
+[source]
+repo = "spinf/qwen3.8-27b-int4"
+revision = "22de4859c04ccdb4136d89b66e56e717db752c7c"   # uploaded 2026-10-15; the outlier table and parity references are of these weights
+format = "gptq-int4-g32"
+
+[quant]
+default = "auto"                     # i8 (the split scheme with the checkpoint's outlier table); f16 / fp8 / bf16 selectable
+allowed = ["i8", "f16", "fp8", "bf16"]
+
+[image]
+scheme = "qwen"
+side = 32
+detail_tokens = { low = 256, auto = 1024, high = 4096 }
+
+[limits]
+token_budget = 16384
+max_tokens = 16384                   # the 24 GB card: a longer solo stream is not measured

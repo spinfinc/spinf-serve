@@ -1,0 +1,23 @@
+# pplx-decider-v1-27b (Perplexity AI, Apache 2.0), our GPTQ int4 copy (quantizations/pplx-decider-v1-27b-int4): a decision model
+# with a 255-code readout in place of the LM head (plan §3.1). Scores only; questions in its own protocol; text at launch.
+id = "spinf/pplx-decider-v1-27b-int4"
+name = "spinf pplx-decider 27B"
+aliases = []
+family = "qwen35"
+head = "readout"
+capabilities = ["score"]
+prompt_style = "decider"
+media = []
+
+[source]
+repo = "spinf/pplx-decider-v1-27b-int4"
+revision = "5579a6ec32478b65920cb2a1d9fd23349fb51699"   # uploaded 2026-10-15; the outlier table and the 11-set run are of these weights
+format = "gptq-int4-g32"
+
+[quant]
+default = "auto"                     # i8 (the split scheme with the checkpoint's outlier table); f16 / fp8 / bf16 selectable
+allowed = ["i8", "f16", "fp8", "bf16"]
+
+[limits]
+token_budget = 16384
+max_tokens = 16384

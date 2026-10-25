@@ -1,0 +1,33 @@
+{
+ "request": {
+  "model": "$MODEL",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "hi"
+     },
+     {
+      "type": "image_url",
+      "image_url": {
+       "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+      }
+     }
+    ]
+   }
+  ],
+  "scoring": {
+   "packs": [
+    {
+     "id": "spinf/moderation"
+    }
+   ]
+  }
+ },
+ "expect": {
+  "status": 400,
+  "code": "pack_media_not_supported"
+ }
+}

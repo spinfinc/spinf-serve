@@ -1,0 +1,20 @@
+{
+ "path": "/v1/chat/completions",
+ "request": {
+  "model": "$MODEL",
+  "messages": [
+   {
+    "role": "user",
+    "content": "OPEC+ agreed on Sunday to extend its voluntary output cuts through the first quarter, while Saudi Arabia signaled it could deepen reductions if prices keep sliding. Analysts noted that US crude inventories fell for a third straight week as refinery runs reached a seasonal high."
+   }
+  ]
+ },
+ "expect": {
+  "status": 400,
+  "code": "scoring_required"
+ },
+ "expect_b": {
+  "code": "empty_queries"
+ },
+ "note": "the hosted API answers empty_queries until its front forwards the body to spinf-serve (plan step 6)"
+}

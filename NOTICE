@@ -1,0 +1,11 @@
+spinf-serve
+Copyright 2026 spinf Inc.
+
+This product includes software developed by third parties:
+
+- flash-linear-attention (fla-core 0.5.2), MIT License, Copyright (c) 2023-2026 Songlin Yang, Yu Zhang, Zhiyuan Li.
+  spinf_serve/models/qwen35/gdn.py vendors its Gated DeltaNet chunk state kernel (chunk_gated_delta_rule_fwd_kernel_h_blockdim64)
+  with changes (initial and final states addressed by row index).
+
+The model checkpoints this engine runs are distributed by their authors under their own terms (see ACKNOWLEDGEMENTS.md);
+none are included in this repository.

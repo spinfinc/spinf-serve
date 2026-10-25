@@ -1,0 +1,24 @@
+# Gemma 4 12B: the default model. The "unified" checkpoint reads images, audio and video through its own embedders.
+id = "spinf/gemma-4-12b-fp8"
+name = "spinf Gemma 4 12B"
+aliases = ["spinf-12b", "google/gemma-4-12B", "gemma-4-12b"]   # the hosted service's names for this model, so a client written for it works here as is
+family = "gemma4"
+media = ["image", "audio", "video"]
+
+[source]
+repo = "spinf/gemma-4-12b-fp8"       # our FP8-static copy of google/gemma-4-12B @ 023679ed (quantizations/gemma-4-12b-fp8); private until the launch
+revision = "a689df2c5f611e3bfaa4569b8190f97db5018569"
+format = "fp8-static"
+
+[quant]
+default = "auto"                     # fp8s on cards with fp8 tensor cores (the scales of this revision), else bf16 / w8a16
+allowed = ["fp8s", "fp8", "fp8row", "w8a16", "w8a8", "bf16"]
+
+[image]
+scheme = "gemma"
+side = 48
+detail_tokens = { low = 70, auto = 280, high = 1120 }
+
+[limits]
+token_budget = 16384
+max_tokens = 65536

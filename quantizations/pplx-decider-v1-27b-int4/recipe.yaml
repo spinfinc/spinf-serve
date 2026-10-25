@@ -1,0 +1,24 @@
+upload: spinf/pplx-decider-v1-27b-int4
+source: {repo: perplexity-ai/pplx-decider-v1-27b, revision: d8c3bd18e31dc1804433d38528b3e770019bf00c, licence: Apache-2.0}
+scheme: gptq-int4-g32     # the Qwen3.8-27B recipe, ../gptq_quantize.py (quantize_config.json: what GPTQModel wrote)
+tool: {gptqmodel: 6.0.3, foem: {alpha: 0.25, beta: 0.2}, mse: 2.0, act_group_aware: true}
+head: readout             # readout.safetensors [255, 5120] + decision_config.json unchanged; no lm_head in the checkpoint
+scope: text decoder linears int4 (400 tensors); in_proj_a/b, norms, embeddings, vision tower bf16 (333 tensors)
+run: {date: 2026-10-14, gpu: A40 48 GB (RunPod secure cloud, CA-MTL-1), duration: 126 min, size_gb: 17, calibration_sha256: 06660b84b0d0f518, seed: 20261006, tools: {gptqmodel: 6.0.3, transformers: 5.10.0, torch: 2.14.0+cu130}}
+previous_run: {date: 2026-10-06, gpu: RTX 6000 Ada (RunPod), duration: 2h10m, size_gb: 17.6, script: the third-party checkpoint's quantize.py adapted (kept privately); superseded}
+artifact: the maintainers' model store (spinf/pplx-decider-v1-27b-int4), spinf_quantize.json inside it; not in git (the 2026-10-06 copy is also on S3)
+evaluation: 2026-10-14, this copy through the decider's own protocol on spinf-serve (i8 with the table below, 4090, 20,156 test rows in 32 min):
+  mean of the 11 sets 83.0 (the original's card 84.3 through the Perplexity API; the superseded 2026-10-06 copy 82.4); per set belebele 96.9,
+  truthfulqa 84.3, tabfact 90.7, winogrande 89.3, contractnli 84.3, circa 75.6, ragtruth 86.2, jevbench 76.6, judgebench 77.1, fpb 75.7, bbh 75.7.
+  i8 vs f16 on the same weights over the 440-question sample: same answer on 98.9 %, mean |Δ probability| 0.005
+outliers:
+  file: spinf_outliers.json (exported 2026-10-14 with ../export_outliers.py on these weights; the copy here is the one in the checkpoint)
+  n_out: 64
+  source: per-channel absmax in bf16 over one 8,188-token stream of 300 RAGTruth decision jobs (the same jobs as for qwen3.8-27b-int4); 99-100 % of the tokens peak in the kept channels of the split linears
+media: []                 # text at launch; the vision tower is in the checkpoint, untested on the engine for this model
+model_card: MODEL_CARD.md
+hub: {repo: Spinf/pplx-decider-v1-27b-int4, revision: 5579a6ec32478b65920cb2a1d9fd23349fb51699, uploaded: 2026-10-15, private: true (public at launch); every file's sha256 checked against the store; the manifest pins it}
+smoke: 2026-10-14, the engine (f16, 4090) serves it through the readout; 440 questions sampled 40 per set from the 11 decision sets, scored in
+  78 s: 81.6 % correct vs 80.5 % for the 2026-10-06 copy on the same rows, the two copies choose the same code on 97.7 % of them,
+  mean |Δ probability| 0.004-0.028 per set
+status: quantized 2026-10-14 with gptq_quantize.py (the LM head dropped, architectures Qwen3_5Model restored, readout and decision_config kept), smoke-tested on the engine; outlier table exported 2026-10-14; 11-set run done 2026-10-14 (83.0 mean); uploaded 2026-10-15 (private); to do: make public at launch

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+dist/
+.env
+# the maintainers' news fixtures carry article text that is not cleared for publication: local only (the public fixture is
+# fixtures/wikinews_*.json.gz)
+fixtures/news_*

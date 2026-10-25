@@ -1,0 +1,21 @@
+upload: spinf/gemma-4-31b-fp8
+source: {repo: google/gemma-4-31B, revision: 5bbc2fb1c1b2c611d06e3d9f23c170ba21659d89, format: safetensors-bf16}
+scheme: fp8-static
+calibration:
+  file: calibration.json
+  method: as gemma-4-12b-fp8
+  headroom: 2.0
+  corpus: spinf's internal calibration corpus v1 without audio (no audio encoder) and without the 3 long documents over the 32k limit, 810,408 tokens
+  run: {date: 2026-10-02, gpu: NVIDIA L40S (RunPod), torch: 2.14.0+cu130, engine: spinf_engine (pre spinf-serve)}
+media: [image, video]
+writes: as gemma-4-12b (vision tower bf16)
+written: {date: 2026-10-15, tool: ../fp8_quantize.py, device: RTX PRO 6000 Blackwell (RunPod; a local copy written on an RTX 4090 for the model store), size_gb: 33.3, shards: 7, quantized_linears: 410}
+artifact: the maintainers' model store (spinf/gemma-4-31b-fp8), spinf_quantize.json and calibration.json inside it; not in git
+parity:
+  fp8s: fixtures/news_20260918.gemma-4-31b.fp8s.json.gz recorded 2026-10-15 on the pod (the load-time scheme on the bf16 original with the table;
+    two processes bit-identical)
+  checkpoint: fixtures/news_20260918.spinf-gemma-4-31b-fp8.json.gz recorded 2026-10-15 on the same card: identical bit for bit to the fp8s
+    reference on all 1,328 reads (a CPU-written copy had scored 0.083 mean |Δ lp|, 98.4 % sign agreement: see ../fp8_quantize.py)
+hub: {repo: Spinf/gemma-4-31b-fp8, revision: 8c54e9850ccca10823f2936c77ed045c735e123d, uploaded: 2026-10-16, private: true (public at launch); every LFS file's sha256 checked against the store; the manifest pins it;
+  the pod's shards and the store's (RTX 4090) are byte-identical, so the upload is the local copy; a first revision uploaded from the CPU-written copy on 2026-10-16 was deleted}
+status: calibrated, checkpoint written and parity-checked 2026-10-15, uploaded 2026-10-16 (private); to do: make the repo public at launch

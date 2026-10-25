@@ -1,0 +1,29 @@
+# The CPU suite and lint on every push and pull request. The GPU parity gate (README "Develop") runs by hand on a card: there is
+# no GPU runner. The official packs' golden fixtures need a checkout of spinf-prompts next to the tests (SPINF_PROMPTS_DIR);
+# without one those tests skip. SPINF_PROMPTS_REPO (a repository variable) and SPINF_PROMPTS_TOKEN (a secret) point a fork or a
+# mirror at its own copy of the pack repository; unset, the public one is used.
+name: ci
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7
+        id: prompts
+        continue-on-error: true
+        with:
+          repository: ${{ vars.SPINF_PROMPTS_REPO || 'spinfinc/spinf-prompts' }}
+          token: ${{ secrets.SPINF_PROMPTS_TOKEN || github.token }}
+          path: .spinf-prompts
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv sync --frozen --extra server
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run pytest
+        env:
+          SPINF_PROMPTS_DIR: ${{ steps.prompts.outcome == 'success' && format('{0}/.spinf-prompts', github.workspace) || '' }}

@@ -1,0 +1,22 @@
+{
+ "request": {
+  "model": "$MODEL",
+  "messages": [
+   {
+    "role": "user",
+    "content": "OPEC+ agreed on Sunday to extend its voluntary output cuts through the first quarter, while Saudi Arabia signaled it could deepen reductions if prices keep sliding. Analysts noted that US crude inventories fell for a third straight week as refinery runs reached a seasonal high."
+   }
+  ],
+  "scoring": {
+   "packs": [
+    {
+     "id": "spinf/nope"
+    }
+   ]
+  }
+ },
+ "expect": {
+  "status": 400,
+  "code": "unknown_pack"
+ }
+}

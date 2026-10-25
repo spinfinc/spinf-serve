@@ -1,0 +1,37 @@
+{
+ "request": {
+  "model": "$MODEL",
+  "messages": [
+   {
+    "role": "user",
+    "content": "OPEC+ agreed on Sunday to extend its voluntary output cuts through the first quarter, while Saudi Arabia signaled it could deepen reductions if prices keep sliding. Analysts noted that US crude inventories fell for a third straight week as refinery runs reached a seasonal high."
+   }
+  ],
+  "scoring": {
+   "queries": [
+    {
+     "id": "org",
+     "template": "\n\nThe organisation that agreed to extend the cuts is \"{*}\""
+    },
+    {
+     "id": "weeks",
+     "template": "\n\nQ: For how many straight weeks did inventories fall?\nA:{n}",
+     "max_tokens": 8,
+     "top_k": 3
+    },
+    {
+     "id": "supply_cut",
+     "template": "\n\nDoes the article report a cut in oil supply?\nAnswer:{?}",
+     "options": [
+      " yes",
+      " no"
+     ]
+    }
+   ]
+  }
+ },
+ "expect": {
+  "status": 200
+ },
+ "note": "completion_tokens: spinf-serve counts generated slots only (the decode steps of searched slots are usage.extraction.decode_tokens); the hosted API counts both until step 6"
+}

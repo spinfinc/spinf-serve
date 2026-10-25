@@ -1,0 +1,48 @@
+{
+  "bits": 4,
+  "group_size": 32,
+  "desc_act": false,
+  "lm_head": false,
+  "method": "gptq",
+  "quant_method": "gptq",
+  "format": "gptq",
+  "checkpoint_format": "gptq",
+  "pack_dtype": "int32",
+  "meta": {
+    "quantizer": [
+      "gptqmodel:6.0.3"
+    ],
+    "uri": "https://github.com/modelcloud/gptqmodel",
+    "damp_percent": 0.05,
+    "damp_auto_increment": 0.01,
+    "static_groups": false,
+    "true_sequential": true,
+    "mse": 2.0,
+    "gptaq": null,
+    "foem": {
+      "alpha": 0.25,
+      "beta": 0.2,
+      "device": "auto"
+    },
+    "act_group_aware": true,
+    "fallback": {
+      "strategy": "rtn",
+      "threshold": "0.5%",
+      "smooth": null
+    },
+    "offload_to_disk": true,
+    "offload_to_disk_path": "./gptqmodel_offload/wnvzouya-sqfqcuux/",
+    "pack_impl": "cpu",
+    "gc_mode": "interval",
+    "wait_for_submodule_finalizers": false,
+    "auto_forward_data_parallel": false,
+    "vram_strategy": "exclusive",
+    "mock_quantization": false,
+    "hessian": {
+      "chunk_size": null,
+      "chunk_bytes": null,
+      "staging_dtype": "float32"
+    }
+  },
+  "sym": true
+}
