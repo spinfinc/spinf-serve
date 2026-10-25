@@ -31,6 +31,21 @@ name, and is not batch-invariant (no calibrated scales). Your own manifests go i
   deterministic run to run, but a score then depends slightly on how the batch is packed, and differs from the Ada
   workers'. Scores also differ between GPU architectures; `system_fingerprint` tells them apart.
 
+## The image
+
+`ghcr.io/spinfinc/spinf-serve` is spinf-serve from PyPI on `python:3.12-slim`, nothing else baked in: the model is downloaded
+from the Hub at first start into `/root/.cache` (mount a volume there), the official packs are fetched there too, and the
+kernels compile on your GPU at first start and are cached there. The image's `ENTRYPOINT` is `spinf-serve serve`, so
+everything in this page applies: flags after the image name, `SPINF_*` variables with `-e`, a config file mounted and named
+with `--config`. A local snapshot is served with `-v /path/to/snapshot:/model:ro` and `--model-dir /model`; a shared model
+volume with `-e SPINF_CACHE_DIRS=/models -v /path/to/models:/models:ro`. The container's `HEALTHCHECK` is `/readyz` with a
+20-minute start period, which covers a first-start download; set your orchestrator's readiness probe on `/readyz` as well.
+
+```sh
+docker run --gpus '"device=1"' -p 8010:8000 -v spinf-cache:/root/.cache \
+  ghcr.io/spinfinc/spinf-serve:0.1.1 spinf/gemma-4-12b-fp8 --token s3cret --media none --max-content-tokens 8192
+```
+
 ## Server options
 
 Settings are layered: command-line flags over `SPINF_*` environment variables over a config file (`--config
