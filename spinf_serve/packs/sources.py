@@ -131,7 +131,8 @@ class GitHub:
         return sha
 
     def tarball(self, owner: str, repo: str, commit: str) -> bytes:
-        return self._get(f"{GITHUB_API}/repos/{owner}/{repo}/tarball/{commit}", "application/octet-stream")
+        # the default Accept: GitHub answers 415 to application/octet-stream here and 302 to codeload otherwise (urllib follows)
+        return self._get(f"{GITHUB_API}/repos/{owner}/{repo}/tarball/{commit}")
 
 
 def _extract(tar_bytes: bytes, dest: str) -> None:
