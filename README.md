@@ -104,6 +104,13 @@ pip install "spinf-serve[server]"
 spinf-serve serve spinf/gemma-4-12b-fp8          # downloads the checkpoint on first start; serves on port 8000
 ```
 
+Or the image, with the NVIDIA Container Toolkit installed (the volume keeps the model and the compile caches between runs;
+arguments after the image name are those of `spinf-serve serve`):
+
+```sh
+docker run --gpus all -p 8000:8000 -v spinf-cache:/root/.cache ghcr.io/spinfinc/spinf-serve
+```
+
 Then ask. Two classifications and one extraction, answered from a single read of the content:
 
 ```sh

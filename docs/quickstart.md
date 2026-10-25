@@ -12,6 +12,19 @@ pip install "spinf-serve[server]"           # or: uv add "spinf-serve[server]"
 spinf-serve serve spinf/gemma-4-12b-fp8     # downloads the checkpoint on first start, serves on port 8000
 ```
 
+The same server as a container, with the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/)
+installed (Python and the pinned dependencies come with the image; the host needs only the driver):
+
+```bash
+docker run --gpus all -p 8000:8000 -v spinf-cache:/root/.cache ghcr.io/spinfinc/spinf-serve
+docker run --gpus all -p 8000:8000 -v spinf-cache:/root/.cache ghcr.io/spinfinc/spinf-serve spinf/gemma-4-31b-fp8 --token s3cret
+```
+
+The volume at `/root/.cache` keeps the downloaded model, the compile caches and the official packs between runs, so only the
+first start downloads and compiles. Arguments after the image name are those of `spinf-serve serve`; the `SPINF_*` environment
+variables work too (`-e SPINF_MODEL=spinf/qwen3.8-27b-int4`). Images are tagged by version (`ghcr.io/spinfinc/spinf-serve:0.1.1`)
+and `latest`.
+
 The server answers `GET /readyz` with 200 once the model is loaded and warm: by default the warm-up runs every compile a
 request could pay (about two to two and a half minutes on a 4090 for the 12B, most of it the extraction path; `--warmup
 short` or `none` trades that for slower first calls, see [Configuration](configuration.md#server-options)). Add `--token

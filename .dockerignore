@@ -1,0 +1,3 @@
+# the image installs spinf-serve from PyPI; nothing in the tree is copied in
+*
+!Dockerfile
