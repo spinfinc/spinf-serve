@@ -44,7 +44,7 @@ The same request, with the same results, runs against the hosted API at `api.spi
 
 - **Fits on one 48 GB GPU (RTX 6000 Ada, L40S, L40, RTX PRO 6000 Blackwell).** FP8 weights and the fp8 tensor cores; one card, no tensor parallelism.
 - **Batch-invariant scores.** An input's scores are bit-identical whether it is scored alone or packed with other inputs
-  (spinf-serve `docs/findings/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
+  (spinf-serve `docs/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
 - **Pinned and parity-tested.** spinf-serve names this repo at an exact revision and ships a parity reference recorded on it;
   a new revision is never served untested.
 - **Media:** images and video (the vision encoder, kept in bf16); no audio in this checkpoint.

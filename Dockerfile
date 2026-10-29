@@ -7,9 +7,9 @@
 #   docker run --gpus all -p 8000:8000 -v spinf-cache:/root/.cache ghcr.io/spinfinc/spinf-serve spinf/gemma-4-31b-fp8 --token s3cret
 #
 # Arguments after the image name are those of `spinf-serve serve` (docs/configuration.md); the environment works too
-# (SPINF_MODEL, SPINF_TOKEN, SPINF_PACKS, the limits). Build: docker build --build-arg SPINF_SERVE_VERSION=0.1.1 -t spinf-serve .
+# (SPINF_MODEL, SPINF_TOKEN, SPINF_PACKS, the limits). Build: docker build --build-arg SPINF_SERVE_VERSION=0.1.2 -t spinf-serve .
 FROM python:3.12-slim-bookworm
-ARG SPINF_SERVE_VERSION=0.1.1
+ARG SPINF_SERVE_VERSION=0.1.2
 # expandable_segments: the allocator grows its segments instead of keeping fragments, which a 24 GB card needs at 20 GiB allocated
 ENV PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
     PYTHONUNBUFFERED=1 HF_HUB_DISABLE_TELEMETRY=1 OMP_NUM_THREADS=4 \

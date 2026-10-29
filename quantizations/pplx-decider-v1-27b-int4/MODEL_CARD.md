@@ -45,7 +45,7 @@ The same request, with the same results, runs against the hosted API at `api.spi
 
 - **Fits on one 24 GB GPU (RTX 4090 / 5090 class).** int4 weights kept packed on the card, int8 tensor-core GEMMs for the activations, as for spinf/qwen3.8-27b-int4.
 - **Batch-invariant scores.** An input's scores are bit-identical whether it is scored alone or packed with other inputs
-  (spinf-serve `docs/findings/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
+  (spinf-serve `docs/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
 - **Pinned and parity-tested.** spinf-serve names this repo at an exact revision and ships a parity reference recorded on it;
   a new revision is never served untested.
 - **Media:** text at launch (the vision tower is in the checkpoint and not yet validated on spinf-serve for this model).

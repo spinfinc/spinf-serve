@@ -22,7 +22,7 @@ docker run --gpus all -p 8000:8000 -v spinf-cache:/root/.cache ghcr.io/spinfinc/
 
 The volume at `/root/.cache` keeps the downloaded model, the compile caches and the official packs between runs, so only the
 first start downloads and compiles. Arguments after the image name are those of `spinf-serve serve`; the `SPINF_*` environment
-variables work too (`-e SPINF_MODEL=spinf/qwen3.8-27b-int4`). Images are tagged by version (`ghcr.io/spinfinc/spinf-serve:0.1.1`)
+variables work too (`-e SPINF_MODEL=spinf/qwen3.8-27b-int4`). Images are tagged by version (`ghcr.io/spinfinc/spinf-serve:0.1.2`)
 and `latest`.
 
 The server answers `GET /readyz` with 200 once the model is loaded and warm: by default the warm-up runs every compile a

@@ -43,7 +43,7 @@ volume with `-e SPINF_CACHE_DIRS=/models -v /path/to/models:/models:ro`. The con
 
 ```sh
 docker run --gpus '"device=1"' -p 8010:8000 -v spinf-cache:/root/.cache \
-  ghcr.io/spinfinc/spinf-serve:0.1.1 spinf/gemma-4-12b-fp8 --token s3cret --media none --max-content-tokens 8192
+  ghcr.io/spinfinc/spinf-serve:0.1.2 spinf/gemma-4-12b-fp8 --token s3cret --media none --max-content-tokens 8192
 ```
 
 ## Server options

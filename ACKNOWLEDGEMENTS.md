@@ -34,7 +34,7 @@ on a dataset also adds the line here (and in `NOTICE` when code is included).
 - GPTQ (Frantar, Ashkboos, Hoefler, Alistarh, 2022) and FOEM (First-Order Error Matters, AAAI 2026): the int4 weights.
 - LLM.int8() (Dettmers, Lewis, Belkada, Zettlemoyer, 2022): the mixed-precision decomposition our i8 split scheme fixes in advance
   (the outlier channels kept exact, the rest int8 per token).
-- SmoothQuant (Xiao et al., 2022): evaluated as an alternative to the outlier split (docs/findings/QWEN.md).
+- SmoothQuant (Xiao et al., 2022): evaluated as an alternative to the outlier split (docs/QWEN.md).
 - Gated DeltaNet (Yang, Kautz, Hatamizadeh, 2024): the recurrent layers of the Qwen3.5 architecture.
 - FlexAttention (PyTorch): the tree masks that let many prompts share one read of the content.
 

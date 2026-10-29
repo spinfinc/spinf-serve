@@ -44,7 +44,7 @@ The same request, with the same results, runs against the hosted API at `api.spi
 
 - **Fits on one 24 GB GPU (RTX 4090 / 5090 class).** int4 weights kept packed on the card, int8 tensor-core GEMMs for the activations; about 19 GB in use at a 16k-token packed batch.
 - **Batch-invariant scores.** An input's scores are bit-identical whether it is scored alone or packed with other inputs
-  (spinf-serve `docs/findings/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
+  (spinf-serve `docs/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
 - **Pinned and parity-tested.** spinf-serve names this repo at an exact revision and ships a parity reference recorded on it;
   a new revision is never served untested.
 - **Media:** images and video (the vision tower, kept in bf16); no audio in this architecture.
@@ -61,7 +61,7 @@ Nothing in this repo is required by other engines: the checkpoint is a standard 
 ## What is different from the original
 
 The GPTQ int4 error against the bf16 original: on 13k decision reads, mean |Δ log-prob| 0.06 with the int8 activation scheme,
-the top option agreeing with bf16 on more than 99 % of reads (spinf-serve `docs/findings/QWEN.md`, measured on the copy below with
+the top option agreeing with bf16 on more than 99 % of reads (spinf-serve `docs/QWEN.md`, measured on the copy below with
 the same recipe). On eleven public decision benchmarks (20k test items, spinf's label-free prompts) this copy scores a mean of 79.0
 with the int8 activation scheme, against 78.4 for that earlier copy; the int8 scheme and fp16 activations agree on the sign of
 99.3 % of 1,328 reference reads. The recipe is the one of btbtyler09/Qwen3.8-27B-GPTQ-4bit, which we served before publishing our

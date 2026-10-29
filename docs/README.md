@@ -1,6 +1,7 @@
 # spinf-serve documentation
 
-spinf-serve answers many questions about a piece of content in a single pass. A question is a template that ends where
+spinf-serve answers many questions about a piece of content in a single pass: bulk classification, extraction and the
+decisions built from them. A question is a template that ends where
 the answer goes, with the answers to score there; the engine returns the probability of each answer for the content.
 The content is read once and every question is answered from that read, so adding questions costs only the tokens of
 the questions and answers themselves. The same request format runs against the hosted spinf API at `api.spinf.com`:

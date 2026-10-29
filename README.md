@@ -1,123 +1,46 @@
 # spinf-serve
 
-**The open-source inference engine for decision models.**
+**Bulk classification and decision inference on one GPU.**
 
-spinf-serve reads a piece of content once and answers hundreds of questions about it in parallel, as probabilities
-rather than text. It turns a standard open model (Gemma 4, Qwen3.8) into a decision model through **decision mode**:
-one input, many questions, scores instead of generation, and the same score whatever else is in the batch. It runs on
-one 24 GB GPU and serves an OpenAI-compatible API that is also the API of the hosted spinf service.
+spinf-serve reads a piece of content once and answers many questions about it in the same pass. Each answer is a
+probability over the options you give, not generated text. It runs on one 24 GB NVIDIA GPU and serves an
+OpenAI-compatible API, the same API as the hosted spinf service. Apache 2.0.
 
-## What it does
+## Why it exists
 
-- **Scoring.** A question is a template that ends where the answer goes, with the answers to score there. The engine
-  returns the probability of each answer, its log-probability, and the same question's probability on empty content
-  (the floor), so a score can be read as a lift over the question's own bias.
-- **Many questions, one read.** The content is read once; every question is a branch of the same pass. Adding a
-  question costs its own tokens only. Placeholders turn one template into a grid of questions.
-- **Extraction and generation** from the same read: `{*}` text, `{n}` numbers and `{$}` amounts decoded with their
-  probabilities, or free text generated into a slot.
-- **Batch invariance.** With the calibrated fp8 scheme, an input's scores are bit-identical whether it is scored
-  alone or packed with thousands of others. Scores compare across calls, days and servers; a `system_fingerprint`
-  says when they do not.
-- **Media.** Images, audio and video frames in the content, read by the models that support them.
-- **Prompt packs.** Ready-made, calibrated question sets preloaded into the server and named in a request
-  ([below](#prompt-packs)); every pack we know of, ours and others', is listed in [PACKS.md](PACKS.md).
-- **Throughput.** Inputs are packed into 16k-token passes on one GPU: about 10,000 tokens per second on an RTX 4090
-  with the 12B model.
-- **One API, hosted or self-hosted.** The request and response are those of `api.spinf.com`; a client switches by
-  changing the base URL and the key.
-- **Clients and agents.** [spinf-client](https://github.com/spinfinc/spinf-client) (`pip install spinf-client`) talks to
-  either server; the [agent skills](https://github.com/spinfinc/skills) teach a coding agent the API, this server and the pack
-  format; the packs come from [spinf-prompts](https://github.com/spinfinc/spinf-prompts) and from anyone's repository
-  ([PACKS.md](PACKS.md)).
-- **Questions, ideas, bugs.** The [issues](https://github.com/spinfinc/spinf-serve/issues) of this repository are the one
-  place for them; there is no forum or chat.
+We built this engine for our own work: a daily market index read from millions of news articles, each article asked
+dozens of narrow, calibrated questions. A serving engine built for chat re-reads the content for every question and
+generates one token at a time, which made that job slow and expensive. spinf-serve lays every question out as a
+branch of one read of the content and packs many contents into one forward pass. Bulk classification is where it
+started and where it is strongest.
 
-## Speed and scale
+The same mechanism is what is now called a **decision model**: a model that returns a probability over a fixed set
+of answers (yes or no, a label, a level) instead of a paragraph. Any open instruction model works this way in
+spinf-serve, and dedicated decision models run as they are. The hosted spinf API grew out of this engine; we are
+publishing it because people asked to run it on their own hardware.
 
-spinf-serve exists for one workload: **many questions about one content**. Our own first use, a daily oil-market
-index read from 15 million news articles, taught us that asking thousands of narrow, calibrated questions of every
-article gives a far more accurate read than any single prompt, and that no engine built for chat could do it at a
-price that made sense. A chat engine re-reads the content for every question; even with prefix caching it generates
-one token at a time per prompt and treats every question as a separate request. spinf-serve reads the content once
-and lays every question out as a branch of that read, packed with other inputs into 16k-token passes on one GPU.
-
-Measured on one RTX 4090 with Gemma 4 12B in fp8, the same 1,344 questions (24 news articles of about 470 tokens, 56
-questions each, every answer a probability over two options: the public job set in `fixtures/`) sent over HTTP to
-spinf-serve and to **vLLM 0.26 with prefix caching**, which is what most people would reach for (`benchmarks/`):
-
-| one RTX 4090, warm, per second | spinf-serve | vLLM 0.26, prefix caching, 128 requests in flight |
-|---|---|---|
-| questions answered | **491** | 200 |
-| tokens of work processed (content once, then each question's own tokens) | 11,200 | 4,600 |
-| the same result for an engine that re-reads the content per question | 236,000 tokens | 96,000 tokens |
-| the 1,344 questions | **2.7 s** | 6.7 s |
-
-2.5 times faster on the same card for the same answers, and vLLM is already doing the right thing here: its prefix
-cache reuses each article across its 56 questions. What it cannot do is answer the questions in one forward pass, so it
-runs 1,344 single-token requests against the cache, while spinf-serve lays the 56 questions out as branches of one read
-and packs the 24 articles into two 16k-token passes. The gap grows with the number of questions per content: at 56
-questions the shared read saves 21 times the tokens; at a thousand it saves hundreds of times, and a thousand questions
-on one content still cost about what the questions themselves weigh. Processed-token throughput stays at the engine's
-rate, about 11,000 per second per 4090 for the 12B model (on an earlier set of 18 shorter articles with 74 questions each
-the ratio was 2.9). The int4 Qwen3.8 27B model showed the same ratio range (2.2 to 2.8 times vLLM with prefix caching) on
-2,211 decision-benchmark jobs in our internal measurements. Anyone can rerun the comparison: `benchmarks/README.md`.
-
-What this means for a job:
-
-- **Content moderation**: the `spinf/moderation` pack asks 106 questions of every message (22 categories, three
-  decision modes). One 4090 moderates about 20,000 messages per hour through the full pack, each message scored for
-  every category in one read.
-- **News and document analysis**: 74 calibrated questions per article, aggregated into indexes, at nearly 700
-  questions per second per GPU.
-- **Triage, routing, tagging**: intent in two levels, urgency, sentiment, risk flags, personal-data checks and a
-  policy check in one pass, each a question in the same list, each costing its own tokens only.
-
-**Extraction and generation** ride the same read but add decoding steps: a searched slot (`{*}` `{n}` `{$}`) costs
-about as much GPU time as 200 to 600 tokens of scoring, a generated slot up to about 2,000. They still benefit from
-the shared read and the packing: the content and the questions are not re-read, the slots of many inputs are decoded
-together, and a few slots next to hundreds of scored questions change the pass's cost only a little.
-
-The example packs (triage, product listings, entertainment metadata, reviews, brand analysis) are in
-[spinf-prompts](https://github.com/spinfinc/spinf-prompts).
-
-## Prompt packs
-
-A specialised use case is rarely one question: content moderation is 106 of them, each calibrated against normal
-traffic and combined into category scores and a decision. spinf-serve standardises a format for this: a **prompt pack**
-is one file holding a set of questions, how to present the content to the model, how the answers turn into scores,
-and how the scores turn into a decision. Packs are preloaded into the server, so a request names one (`"packs": [{"id":
-"spinf/moderation"}]`) instead of carrying hundreds of questions over and over, and gets the pack's categories and
-decision back next to its own questions, from the same read of the content.
-
-Because a pack is a file, it is also a **ready-to-go, shareable set**, and the way specialised knowledge travels
-around this engine. The server loads packs from any GitHub repository or local folder you point it at with `--packs`,
-enabling the ones written for the model it serves; [spinf-prompts](https://github.com/spinfinc/spinf-prompts), the
-official repository (content moderation, triage, products, reviews, brand, entertainment), is one such source, loaded
-by default. **[PACKS.md](PACKS.md) lists every pack we know of**, the official ones and the community's, with
-[thinkingtext/spinf-news-pack](https://github.com/thinkingtext/spinf-news-pack) (oil, equity and market news read as the
-question sets behind a news index) the first from outside. Writing one is a JSON file and a manifest at the root of your
-repository, and listing it is [an issue](https://github.com/spinfinc/spinf-serve/issues/new?template=pack.yml). Details,
-the file format and the request fields: [docs/prompt-packs.md](docs/prompt-packs.md).
+It is not a chat server. Nothing is generated unless you ask for it, and it is built for throughput rather than for
+the latency of a single request.
 
 ## Install and run
 
-Linux, an NVIDIA GPU with 24 GB (fp8 tensor cores for the batch-invariant scheme: RTX 4090 / 5090, L4, L40S, RTX 6000
-Ada, H100), a driver supporting CUDA 13, Python 3.12.
+Linux, an NVIDIA GPU with 24 GB and fp8 tensor cores (Ada, Hopper or Blackwell: RTX 4090 / 5090, L4, L40S, RTX 6000
+Ada, H100), a driver supporting CUDA 13, Python 3.12. Ampere cards run with int8 weights instead
+([configuration](docs/configuration.md#models)).
 
 ```sh
 pip install "spinf-serve[server]"
 spinf-serve serve spinf/gemma-4-12b-fp8          # downloads the checkpoint on first start; serves on port 8000
 ```
 
-Or the image, with the NVIDIA Container Toolkit installed (the volume keeps the model and the compile caches between runs;
+Or the image, with the NVIDIA Container Toolkit installed (the volume keeps the model and the compile caches;
 arguments after the image name are those of `spinf-serve serve`):
 
 ```sh
 docker run --gpus all -p 8000:8000 -v spinf-cache:/root/.cache ghcr.io/spinfinc/spinf-serve
 ```
 
-Then ask. Two classifications and one extraction, answered from a single read of the content:
+Then ask. Two classifications and one extraction from a single read of the content:
 
 ```sh
 curl http://localhost:8000/v1/score \
@@ -143,12 +66,73 @@ curl http://localhost:8000/v1/score \
   }'
 ```
 
-The response gives, for `topic` and `refund`, the probability of each answer and the same probability on empty
-content (the lift between the two is what the message says), and for `month` the most likely answers with their
-probabilities. The same body, with an API key, runs against the hosted API at `api.spinf.com`; the OpenAI SDKs work
-through `/v1/chat/completions` with the `scoring` block in `extra_body` ([quickstart](docs/quickstart.md)).
+For each scored question the response gives every option's probability, and the same probability on empty content
+(real numbers from the 12B model):
 
-As a library: `from spinf_serve import Engine; Engine("spinf/gemma-4-12b-fp8").score(request)`.
+```json
+{ "id": "refund", "combinations": [ { "values": {}, "options": [
+    { "text": " yes", "logprob": -0.90, "p": 0.72, "floor_p": 0.60 },
+    { "text": " no",  "logprob": -1.86, "p": 0.28, "floor_p": 0.40 } ],
+    "residual": 0.44 } ] }
+```
+
+`p` is the probability among your options. `floor_p` is the same question with no content, so `p - floor_p` is what
+the content added (here `topic` moves " billing" from 0.47 to 0.91). `residual` is the probability that went to words
+outside your options. For `month` the response lists the most likely answers with their probabilities ("September" first).
+The same body, with an API key, runs against `api.spinf.com`; the OpenAI SDKs work through `/v1/chat/completions` with
+the `scoring` block in `extra_body` ([quickstart](docs/quickstart.md)).
+
+## What you get
+
+- **One read, many questions.** The content is read once; every question is a branch of the same pass and costs its
+  own tokens only. Placeholders turn one template into a grid of questions.
+- **Scores you can threshold.** A probability per option with its floor and log-probability; a decision is a
+  threshold you choose on your own data ([calibration](docs/calibration.md)).
+- **Extraction** from the same read: `{*}` text, `{n}` numbers and `{$}` amounts decoded with their probabilities,
+  or free text generated into a slot.
+- **The same score whatever else is in the batch.** With the fp8 checkpoints, a content's scores are bit-identical
+  alone or packed with thousands of others, across calls, days and servers. The `system_fingerprint` says when two
+  responses are not comparable.
+- **Images, audio and video frames** in the content, for the models that read them.
+- **Prompt packs.** Ready-made, calibrated question sets for a job (content moderation, triage, product listings,
+  reviews, brand, entertainment), preloaded and named in a request ([below](#prompt-packs)).
+- **Hosted or self-hosted.** A client switches between this server and `api.spinf.com` by changing the base URL and
+  the key. [spinf-client](https://github.com/spinfinc/spinf-client) talks to both; the
+  [agent skills](https://github.com/spinfinc/skills) teach a coding agent the API, this server and the pack format.
+
+## Speed
+
+Measured on one RTX 4090 with Gemma 4 12B in fp8: 24 Wikinews articles of about 470 tokens, 56 two-option questions
+each, 1,344 questions in all (the public job set in `fixtures/`), sent over HTTP to spinf-serve and to vLLM 0.26 with
+prefix caching. The script and the full results are in [benchmarks/](benchmarks/README.md).
+
+| one RTX 4090, warm | spinf-serve | vLLM 0.26, prefix caching, 128 requests in flight |
+|---|---|---|
+| questions answered per second | **491** | 200 |
+| tokens of work per second (content once, then each question's own tokens) | 11,200 | 4,600 |
+| the 1,344 questions | **2.7 s** | 6.7 s |
+
+vLLM already reuses each article across its 56 questions through the prefix cache. What it cannot do is answer them
+in one forward pass: it runs 1,344 single-token requests, while spinf-serve lays the 56 questions out as branches of one
+read and packs the 24 articles into two 16k-token passes. The gap grows with the number of questions per content.
+
+In practice, per 4090 with the 12B model: the `spinf/moderation` pack (106 questions per message, 22 categories)
+scores about 20,000 messages per hour; a news article asked 74 questions is read at nearly 700 questions per second.
+Extraction slots add decoding work (a searched slot costs about as much as 200 to 600 tokens of scoring, a generated
+one up to about 2,000) but share the read.
+
+## Prompt packs
+
+A job is rarely one question: content moderation is 106 of them, each calibrated against normal traffic and combined
+into category scores and a decision. A **prompt pack** is one file holding the questions, how the content is presented
+to the model, how the answers turn into scores and how the scores turn into a decision. The server preloads packs and
+a request names one (`"packs": [{"id": "spinf/moderation"}]`), getting the pack's categories and decision back next
+to its own questions, from the same read.
+
+The official packs are in [spinf-prompts](https://github.com/spinfinc/spinf-prompts), loaded by default. The server
+loads packs from any GitHub repository or local folder given with `--packs`; **[PACKS.md](PACKS.md) lists every
+pack we know of**, ours and others', and an [issue](https://github.com/spinfinc/spinf-serve/issues/new?template=pack.yml)
+adds yours. Format, request fields and sources: [docs/prompt-packs.md](docs/prompt-packs.md).
 
 ## Models
 
@@ -159,49 +143,37 @@ As a library: `from spinf_serve import Engine; Engine("spinf/gemma-4-12b-fp8").s
 | `spinf/qwen3.8-27b-int4` | Qwen3.8-27B, GPTQ int4 | one 24 GB | text, images, video |
 | `spinf/pplx-decider-v1-27b-int4` | Perplexity pplx-decider-v1-27b, GPTQ int4: a decision model with a 255-code readout | one 24 GB | text; scores only, with its own prompts and packs |
 
-Each is a checkpoint we quantized and calibrated, published on the Hugging Face Hub with its recipe
-(`quantizations/`); the engine pins the revision it was parity-tested on. Any other Hub checkpoint of a supported
-architecture family runs by its path, quantized at load time.
+Each is a checkpoint we quantized and calibrated, published on the [Hugging Face Hub](https://huggingface.co/spinf)
+with its recipe (`quantizations/`); the engine pins the revision it was parity-tested on. Any other Hub checkpoint of
+a supported architecture family runs by its path, quantized at load time.
 
 ## Documentation
 
-[docs/](docs/README.md): [quickstart](docs/quickstart.md), [examples](docs/examples.md) (curl calls for one question,
-parallel classifications, classification plus extraction, many contents, a prompt pack),
-[scoring API](docs/scoring-api.md), [configuration](docs/configuration.md), [writing questions](docs/writing-questions.md),
-[calibration](docs/calibration.md), [prompt packs](docs/prompt-packs.md) and [the list of known packs](PACKS.md), [FAQ](docs/faq.md); the [guides](docs/guides/index.md)
-(decision models, probabilities you can act on, few-shot classification, sentiment, survey coding, moderation, intent routing)
-and the engineering documents ([docs/README.md](docs/README.md#engineering-documents)).
+[docs/](docs/README.md): [quickstart](docs/quickstart.md), [examples](docs/examples.md), [scoring API](docs/scoring-api.md),
+[configuration](docs/configuration.md), [writing questions](docs/writing-questions.md), [calibration](docs/calibration.md),
+[prompt packs](docs/prompt-packs.md), [FAQ](docs/faq.md); the [guides](docs/guides/index.md) (decision models,
+probabilities you can act on, few-shot classification, sentiment, survey coding, moderation, intent routing); and the
+engineering documents on how the engine works ([architecture](docs/ARCHITECTURE.md),
+[batch invariance](docs/BATCH_INVARIANCE.md), [precision](docs/PRECISION.md), [the Qwen stack](docs/QWEN.md),
+[extraction](docs/EXTRACTION.md)).
 
 ## Status
 
-The engine (scoring, extraction, generation, media, batch invariance, the two model stacks) is complete and
-parity-tested against recorded references. The server speaks the public API of the hosted service: `spinf-serve serve`,
-`/v1/score` and its chat-completions alias, `/v1/models`, `/v1/packs`, pack sources, the response and error envelopes.
-The `spinf/...` checkpoints are being published; [docs/README.md](docs/README.md#status) keeps the list of what is
-left. How the engine works and the measurements behind it: the engineering documents in
-[docs/](docs/README.md#engineering-documents) (architecture, batch invariance, precision, the Qwen stack, extraction).
+Version 0.1. The engine (scoring, extraction, generation, media, batch invariance, the two model stacks) is complete
+and parity-tested against recorded references; the server speaks the public API of the hosted service; the four
+checkpoints are public. What is still missing is listed in [docs/README.md](docs/README.md#status).
+
+Questions, ideas and bugs go to the [issues](https://github.com/spinfinc/spinf-serve/issues) of this repository.
+There is no forum or chat, and nothing is too small.
 
 ## Layout
 
-```
-spinf_serve/
-  protocol.py, compiler.py, packer.py, scorer.py, decode.py, extract.py, media.py, service.py
-                         the engine: request shape, templates to token tries, packing, one packed forward, extraction
-  manifests/             the served models (TOML): pinned checkpoint, family, schemes, capabilities, media, limits
-  packs/                 prompt packs (pure Python): the file and its validation, the evaluator, a request's packs, the sources
-                         (GitHub, folders, the official repository) and the catalog; `python -m spinf_serve.packs validate | list`
-  models/                one stack per architecture family behind one interface (base.py, registry.py): gemma4.py, qwen35/
-  quant/                 the quantization schemes (linears, kernels, the fp8-static layout), the per-revision tables, the maintainer
-                         commands that produce our checkpoints
-  server/                the HTTP server (FastAPI, one process per GPU): the public API around the engine (api.py), the settings
-                         (config.py: flags > environment > config file > manifest), the app
-  cli.py                 the `spinf-serve` command: serve, score, packs, parity, calibrate
-quantizations/           one folder per published checkpoint: recipe, calibration output, model card
-fixtures/                the public parity fixture (24 Wikinews articles x 56 cells) and one recorded reference per checkpoint
-benchmarks/              the throughput comparison script (spinf-serve against a completions server), its results, the fixture builder
-tests/                   CPU tests (run in CI); the GPU parity gate runs by hand (below)
-docs/                    the user guides and the engineering documents
-```
+`spinf_serve/` holds the engine (`protocol`, `compiler`, `packer`, `scorer`, `extract`, `service`), the served models'
+manifests, the `packs` module (pure Python, also used by the client and the hosted API), one model stack per architecture
+family in `models/`, the quantization schemes in `quant/`, the HTTP server in `server/` and the `spinf-serve` command.
+`quantizations/` has one folder per published checkpoint (recipe, calibration output, model card), `fixtures/` the public
+parity fixture and references, `benchmarks/` the throughput comparison. The map of the code is
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Develop
 
@@ -214,9 +186,8 @@ CUDA_VISIBLE_DEVICES=0 uv run spinf-serve parity --fixture fixtures/wikinews_202
 ```
 
 Every change that touches a kernel, a compile boundary or a quantization scheme ships with the GPU parity run:
-bit-identical log-probabilities on the recorded reference of each published checkpoint ([fixtures/](fixtures/README.md):
-24 Wikinews articles x 56 two-option cells, a reference per model recorded and verified on its card). Scores come from
-exact dependency pins; they change only together with a parity run.
+bit-identical log-probabilities on the recorded reference of each published checkpoint ([fixtures/](fixtures/README.md)).
+Dependencies are pinned exactly; they change only together with a parity run. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licence and acknowledgements
 

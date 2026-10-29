@@ -10,10 +10,10 @@ fine-grained analysis needs. When the answer is open, an extraction slot reads i
 
 ## Are the scores deterministic?
 
-On the fp8s scheme (fp8 tensor cores, the `spinf/...` checkpoints with their calibrated scales), yes, and more than
+On the fp8 scheme with static, calibrated activation scales (`fp8s`: fp8 tensor cores and the `spinf/...` checkpoints), yes, and more than
 that: a content's scores are **bit-identical** whether it is scored alone, with other contents, or with other
 questions in the same call, and identical across fresh starts of the engine on the same GPU architecture. Two things
-change them: another scheme (Ampere's `w8a16`: deterministic run to run, but a score then moves slightly with how the
+change them: another scheme (Ampere's int8 weights, `w8a16`: deterministic run to run, but a score then moves slightly with how the
 batch is packed) and another GPU architecture (Ada and Blackwell run different kernels, so their scores differ by a few
 hundredths). The `system_fingerprint` of each response identifies the engine build, scheme, weights revision and GPU
 architecture that produced it: compare it to know whether two responses are directly comparable.

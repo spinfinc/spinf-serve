@@ -42,9 +42,9 @@ The same request, with the same results, runs against the hosted API at `api.spi
 
 ## Why this copy
 
-- **Fits on one 24 GB GPU (RTX 4090 / 5090, L4, L40S, A5000 class with fp8 tensor cores: Ada, Hopper, Blackwell).** FP8 weights and the fp8 tensor cores; about 14 GB of card memory in use at a 16k-token packed batch, so the rest holds the batch, images and extraction state.
+- **Fits on one 24 GB GPU (RTX 4090 / 5090, L4, L40S, RTX 6000 Ada, H100: fp8 tensor cores, Ada, Hopper or Blackwell).** FP8 weights and the fp8 tensor cores; about 14 GB of card memory in use at a 16k-token packed batch, so the rest holds the batch, images and extraction state.
 - **Batch-invariant scores.** An input's scores are bit-identical whether it is scored alone or packed with other inputs
-  (spinf-serve `docs/findings/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
+  (spinf-serve `docs/BATCH_INVARIANCE.md`). The quantization parameters that make this possible are in the checkpoint.
 - **Pinned and parity-tested.** spinf-serve names this repo at an exact revision and ships a parity reference recorded on it;
   a new revision is never served untested.
 - **Media:** images, audio and video (the checkpoint's own embedders, kept in bf16, never quantized).
@@ -62,7 +62,7 @@ Nothing in this repo is required by other engines: the checkpoint is a standard 
 
 The usual FP8 quantization error against the bf16 original. On our labelled suites (image, audio, video and multilingual
 classification) the static-scale scheme equals dynamic FP8 within noise; on news scoring it drifts from dynamic FP8 by about as
-much as dynamic FP8's own batch noise (details in spinf-serve `docs/findings/BATCH_INVARIANCE.md` and `PRECISION.md`).
+much as dynamic FP8's own batch noise (details in spinf-serve `docs/BATCH_INVARIANCE.md` and `PRECISION.md`).
 Not a fine-tune: the weights are the original's, quantized; the tokenizer and the chat template are unchanged.
 
 ## Provenance
